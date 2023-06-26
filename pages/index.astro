@@ -1,0 +1,33 @@
+<script>
+    import { createStore } from "zustand/vanilla"
+    
+    type Effect =
+        | 'increment'
+        | 'decrement'
+    
+    type State = { count : number }
+    
+    function handler(state: State, message: Effect) {
+        switch (message) {
+            case 'increment': return { count: state.count + 1 }
+            case 'decrement': return { count: state.count - 1 }
+        }
+    }
+    
+    const store = createStore<State>(set => ({ count: 0 }))
+    
+    document.querySelectorAll('[data-reactive]').forEach(reactive => {
+        const key = (reactive as Element & { dataset: { reactive: keyof State }}).dataset.reactive
+        store.subscribe((state, prev) => (state[key] !== prev[key]) && (reactive.textContent = String(state[key])))
+    })
+    
+    document.querySelectorAll('[data-effect]').forEach(effector => {
+        effector.addEventListener('click', () => {
+            store.setState(handler(store.getState(), (effector as Element & { dataset: { effect: Effect }}).dataset.effect))
+        })
+    })
+    
+</script>
+<button data-effect="decrement">-</button>
+<span data-reactive="count">0</span>
+<button data-effect="increment">+</button>
